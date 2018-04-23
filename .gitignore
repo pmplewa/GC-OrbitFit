@@ -1,0 +1,7 @@
+.idea
+.ipynb_checkpoints
+.coverage*
+dist
+*.pyc
+chain.h5
+.DS_Store
