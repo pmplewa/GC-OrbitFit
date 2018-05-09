@@ -33,10 +33,8 @@ class REBOUNDModel():
         bh.params["gr_source"] = 1
     
         # add star "test" particle
-        n = np.sign(a) * np.sqrt(np.fabs(sim.G*bh.m / a**3)) # mean motion
-        M = n * (sim.t - tp) # mean anomaly
         sim.add(hash="test_particle", m=0,
-            primary=bh, M=M, a=a, e=e, inc=inc, Omega=Omega, omega=omega)
+            a=a, e=e, inc=inc, Omega=Omega, omega=omega, T=tp)
         p = sim.particles["test_particle"]
 
         if "Mp" and "rp" in effect_kwargs:
