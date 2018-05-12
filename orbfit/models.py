@@ -6,13 +6,17 @@ import rebound
 import reboundx
 from scipy.optimize import fixed_point
 
-from .constants import (gravitational_constant, speed_of_light,
-    velocity_conversion_factor, reference_time)
+from .constants import (gravitational_constant_times_R03,
+    speed_of_light_times_R0, velocity_conversion_factor_per_R0, reference_time)
 
 
 class REBOUNDModel():             
     def integrate_orbit(self, t_val, M0, R0, a, e, inc, Omega, omega, tp,
                         x0=0, y0=0, vx0=0, vy0=0, vz0=0, **effect_kwargs):
+        # account for factor of R0 in l_unit
+        gravitational_constant = gravitational_constant_times_R03/R0**3
+        speed_of_light = speed_of_light_times_R0/R0
+        velocity_conversion_factor = velocity_conversion_factor_per_R0*R0
 
         t_val = np.sort(t_val)
 
@@ -20,7 +24,7 @@ class REBOUNDModel():
         rebx = reboundx.Extras(sim)      
 
         sim.integrator = "ias15"
-        sim.G = gravitational_constant/R0**3
+        sim.G = gravitational_constant
         sim.t = t_val[0]
 
         # enable post-Newtonian corrections
@@ -61,13 +65,13 @@ class REBOUNDModel():
             x_obs += x0 + vx0 * (t - reference_time)
             y_obs += y0 + vy0 * (t - reference_time)            
 
-            vz_obs = p.vz # the actual observable is the reshift (z = vz_obs/c)
+            vz_obs = p.vz # the actual observable is the redshift (z = vz_obs/c)
             # account for the relativistic Doppler effect
             vz_obs += 0.5 * (p.vx**2 + p.vy**2 + p.vz**2) / speed_of_light
-            # account for gravitational redhsift
+            # account for gravitational redshift
             vz_obs += sim.G*bh.m / np.sqrt(p.x**2 + p.y**2 + p.z**2) / speed_of_light
             # convert to observed units
-            vz_obs *= velocity_conversion_factor*R0
+            vz_obs *= velocity_conversion_factor
             # account for a possible radial velocity of the black hole
             vz_obs += vz0
 
