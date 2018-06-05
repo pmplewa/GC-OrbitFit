@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
-from .gp_tools import sample_gp
-
 
 def plot_data(data, save=None, **kwargs):
     fig, ax = plt.subplots(1, 2, **kwargs)
