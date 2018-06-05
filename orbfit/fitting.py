@@ -25,6 +25,9 @@ class MaxLikeFitter():
         
         return -value
 
+    def fit_orbit(self):
+        raise NotImplementedError
+
     def get_best_fit(self, as_array=False):
         assert self.fit_result is not None
 
