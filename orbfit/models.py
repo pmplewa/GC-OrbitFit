@@ -72,7 +72,7 @@ class REBOUNDModel():
             vz_obs += sim.G*bh.m / np.sqrt(p.x**2 + p.y**2 + p.z**2) / speed_of_light
             # convert to observed units
             vz_obs *= velocity_conversion_factor
-            # account for a possible radial velocity of the black hole
+            # account for a possible radial velocity offset
             vz_obs += vz0
 
             data.loc[t_obs] = {"t'": t, "x": x_obs, "y": y_obs, "vz": vz_obs}
