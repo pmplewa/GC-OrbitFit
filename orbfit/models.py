@@ -65,13 +65,21 @@ class REBOUNDModel():
             x_obs += x0 + vx0 * (t - reference_time)
             y_obs += y0 + vy0 * (t - reference_time)            
 
-            vz_obs = p.vz # the actual observable is the redshift (z = vz_obs/c)
             # account for the relativistic Doppler effect
-            vz_obs += 0.5 * (p.vx**2 + p.vy**2 + p.vz**2) / speed_of_light
-            # account for gravitational redshift
-            vz_obs += sim.G*bh.m / np.sqrt(p.x**2 + p.y**2 + p.z**2) / speed_of_light
+            beta_costheta = p.vz/speed_of_light
+            beta2 = (p.vx**2 + p.vy**2 + p.vz**2)/speed_of_light**2
+            zD = (1 + beta_costheta)/np.sqrt(1 - beta2) - 1
+
+            # account for the gravitational redshift
+            rs = 2*sim.G*bh.m/speed_of_light**2
+            zG = 1/np.sqrt(1 - rs/np.sqrt(p.x**2 + p.y**2 + p.z**2)) - 1
+
+            # calculate the measured radial velocity
+            vz_obs = (zD + zG) * speed_of_light
+
             # convert to observed units
             vz_obs *= velocity_conversion_factor
+            
             # account for a possible radial velocity offset
             vz_obs += vz0
 
