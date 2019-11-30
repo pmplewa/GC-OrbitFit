@@ -1,12 +1,12 @@
 # Stellar Orbit Fitting
 
-Fit the orbit of the star S2 moving around the black hole at the center of the Milky Way: 
+Fit the orbit of the star S2 moving around the black hole at the center of the Milky Way:
 
 *[Example Notebook](example.ipynb)*
 
 [![](preview.png)](https://github.com/pmplewa/GC-OrbitFit/blob/master/example.ipynb)
 
-This code takes into account first-order post-Newtonian corrections and gravitational redshift, as well as a time-correlated astrometric noise component. For the most part it is written with readability in mind, not performance. A faster version implemented in C, for performing nested sampling, can be found [at this link](https://github.com/pmplewa/GC-OrbitFit2).
+This code takes into account first-order post-Newtonian corrections and gravitational redshift, as well as a time-correlated astrometric noise component. For the most part it is written with readability in mind, not performance.
 
 Resources:
 
