@@ -29,15 +29,15 @@ def load_velocity(path, instrument):
     if instrument == "NACO":
         # long slit spectroscopy
         data["technique"] = "spectroscopy"
-        return data    
+        return data
     elif instrument == "OSIRIS":
         # integral field spectroscopy
         data["technique"] = "spectroscopy"
-        return data             
+        return data
     elif instrument == "SINFONI":
         # integral field spectroscopy
         data["technique"] = "spectroscopy"
-        return data           
+        return data
     else:
         raise Exception("Unknown instrument")
 

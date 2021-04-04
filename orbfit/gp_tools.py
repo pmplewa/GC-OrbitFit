@@ -1,14 +1,15 @@
-from george import GP
-from george.kernels import ExpSquaredKernel
 import numpy as np
 import pandas as pd
+
+from george import GP
+from george.kernels import ExpSquaredKernel
 
 from .models import predict_resid, create_gp
 
 
 def sample_gp(params, data, model, t_val, n=1):
-    """Sample from a GP model for astrometric confusion"""
-
+    """Sample from a GP model for astrometric confusion
+    """
     resid = predict_resid(params, data, model)
 
     pos_resid = resid[["x", "x_err", "y", "y_err", "technique"]].dropna()
@@ -26,7 +27,7 @@ def sample_gp(params, data, model, t_val, n=1):
             gpx.compute(df.index, df["x_err"])
             gpy.compute(df.index, df["y_err"])
             if n == 1:
-                sample["x"] = gpx.sample_conditional(df["x"], t_val) 
+                sample["x"] = gpx.sample_conditional(df["x"], t_val)
                 sample["y"] = gpy.sample_conditional(df["y"], t_val)
             else:
                 # average over multiple realizations
