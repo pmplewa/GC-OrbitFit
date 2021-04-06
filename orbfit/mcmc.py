@@ -3,7 +3,7 @@ import numpy as np
 
 from emcee import EnsembleSampler
 from emcee.backends import HDFBackend
-from multiprocessing import Pool
+from multiprocess import Pool
 
 
 logger = logging.getLogger("mcmc")
