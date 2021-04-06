@@ -8,12 +8,28 @@ class MaxLikeFitter():
         assert data.index.is_unique # check for duplicate epochs
         assert len(names) == len(bounds)
 
-        self.data = data
-        self.names = names
-        self.bounds = bounds
-        self.model = model
+        self._data = data
+        self._names = names
+        self._bounds = bounds
+        self._model = model
 
-        self.fit_result = None
+        self._fit_result = None
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def names(self):
+        return self._names
+
+    @property
+    def bounds(self):
+        return self._bounds
+
+    @property
+    def model(self):
+        return self._model
 
     def objective(self, theta):
         """Negative log-likelihood function (to be minimized)
@@ -30,12 +46,12 @@ class MaxLikeFitter():
         raise NotImplementedError
 
     def get_best_fit(self, as_array=False):
-        assert self.fit_result is not None
+        assert self._fit_result is not None
 
         if as_array:
-            return self.fit_result.x
+            return self._fit_result.x
         else:
-            return dict(zip(self.names, self.fit_result.x))
+            return dict(zip(self.names, self._fit_result.x))
 
 class LBFGSBFitter(MaxLikeFitter):
     def fit_orbit(self, theta_init):
@@ -45,7 +61,7 @@ class LBFGSBFitter(MaxLikeFitter):
             bounds=self.bounds, method="L-BFGS-B", options=dict(disp=True, maxiter=np.inf))
 
         assert fit_result.success, "Fit was unsuccessful"
-        self.fit_result = fit_result
+        self._fit_result = fit_result
 
 class DifferentialEvolutionFitter(MaxLikeFitter):
     def fit_orbit(self):
@@ -55,4 +71,4 @@ class DifferentialEvolutionFitter(MaxLikeFitter):
             maxiter=None, polish=True, disp=True)
 
         assert fit_result.success, "Fit was unsuccessful"
-        self.fit_result = fit_result
+        self._fit_result = fit_result

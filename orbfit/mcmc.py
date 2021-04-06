@@ -13,26 +13,58 @@ class MCMCSampler():
         assert data.index.is_unique # check for duplicate epochs
         assert len(names) == len(priors)
 
-        self.data = data
-        self.names = names
-        self.priors = priors
-        self.model = model
+        self._data = data
+        self._names = names
+        self._priors = priors
+        self._model = model
 
-        self.ndim = len(priors)
+        self._ndim = len(priors)
 
         if nwalkers is None:
-            self.nwalkers = 2*self.ndim # minimum reasonable number
+            self._nwalkers = 2 * self.ndim # minimum reasonable number
         else:
-            self.nwalkers = nwalkers
+            self._nwalkers = nwalkers
 
         self._nburn = 0
 
         if checkpoint is not None:
-            self.backend = HDFBackend(checkpoint)
+            self._backend = HDFBackend(checkpoint)
         else:
-            self.backend = None
+            self._backend = None
 
-        self.worker = None # emcee sampler instance
+        self._worker = None # emcee sampler instance
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def names(self):
+        return self._names
+
+    @property
+    def priors(self):
+        return self._priors
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def backend(self):
+        return self._backend
+
+    @property
+    def worker(self):
+        return self._worker
+
+    @property
+    def ndim(self):
+        return self._ndim
+
+    @property
+    def nwalkers(self):
+        return self._nwalkers
 
     @property
     def nburn(self):
@@ -63,10 +95,10 @@ class MCMCSampler():
         return value
 
     def sample_orbit(self, nsteps, **kwargs):
-        self.worker = sample_orbit(self, nsteps, **kwargs)
+        self._worker = sample_orbit(self, nsteps, **kwargs)
 
     def restore(self, **kwargs):
-        self.worker = sample_orbit(self, nsteps=0, **kwargs)
+        self._worker = sample_orbit(self, nsteps=0, **kwargs)
 
     def get_chain(self, **kwargs):
         return self.worker.get_chain(**kwargs)
@@ -104,7 +136,6 @@ class MCMCSampler():
             return np.mean(tau)
         else:
             return tau
-
 
 def sample_orbit(sampler, nsteps, resume=False, processes=None):
     """Run the MCMC sampler

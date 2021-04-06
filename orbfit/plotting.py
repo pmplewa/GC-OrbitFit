@@ -3,7 +3,7 @@ import numpy as np
 
 from corner import corner
 from emcee.autocorr import integrated_time
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 
 def plot_data(data, save=None, **kwargs):
