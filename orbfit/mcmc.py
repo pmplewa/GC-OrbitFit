@@ -98,7 +98,7 @@ class MCMCSampler():
         self._worker = sample_orbit(self, nsteps, **kwargs)
 
     def restore(self, **kwargs):
-        self._worker = sample_orbit(self, nsteps=0, **kwargs)
+        self._worker = sample_orbit(self, nsteps=None, **kwargs)
 
     def get_chain(self, **kwargs):
         return self.worker.get_chain(**kwargs)
@@ -137,31 +137,31 @@ class MCMCSampler():
         else:
             return tau
 
-def sample_orbit(sampler, nsteps, resume=False, processes=None):
+def sample_orbit(sampler, nsteps=0, theta0=None, processes=None):
     """Run the MCMC sampler
 
     Note: For improved parallel performance this function is not implemented as
     a class method of MCMCSampler.
     """
-    assert nsteps >= 0
-
     with Pool(processes) as pool:
         worker = EnsembleSampler(sampler.nwalkers, sampler.ndim, sampler.objective,
             backend=sampler.backend, pool=pool)
 
-        if nsteps > 0:
-            if resume:
-                logger.info("Resuming last run")
-                theta = None # resume sampling from last position
-            else:
-                logger.info("Starting new run")
+        if worker.backend.iteration == 0:
+            logger.info("Starting new run")
+            if theta0 is None:
                 theta = np.array([[prior.draw() for prior in sampler.priors]
                     for n in range(sampler.nwalkers)])
-
-            worker.run_mcmc(theta, nsteps, progress=True)
-
+            else:
+                theta = theta0
         else:
-            logger.info("Restoring from checkpoint")
-            assert sampler.backend is not None
+            logger.info("Resuming last run")
+            theta = worker._previous_state
+            assert theta is not None
+
+        if nsteps is not None:
+            assert nsteps >= 0
+            worker.run_mcmc(theta, nsteps, progress=True)
+            logger.info("finished MCMC run")
 
         return worker
