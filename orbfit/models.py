@@ -137,7 +137,7 @@ class GPNoise():
         return value
 
 def log_gaussian_pdf(r, sigma):
-    return -0.5*np.sum(r**2/sigma**2) -0.5*np.sum(np.log(2*np.pi*sigma**2))
+    return -0.5 * np.sum(r**2 / sigma**2) - 0.5 * np.sum(np.log(2 * np.pi * sigma**2))
 
 def predict_resid(params, data, model):
     pred = []
