@@ -6,8 +6,9 @@ from emcee.autocorr import integrated_time
 from tqdm.auto import tqdm
 
 
-def plot_data(data, save=None, **kwargs):
-    fig, ax = plt.subplots(1, 2, **kwargs)
+def plot_data(data, ax=None, **kwargs):
+    if ax is None:
+        fig, ax = plt.subplots(1, 2, **kwargs)
 
     for instrument, df in data.groupby("instrument"):
         ax[0].errorbar(x=df["x"], y=df["y"], xerr=df["x_err"], yerr=df["y_err"],
@@ -25,13 +26,11 @@ def plot_data(data, save=None, **kwargs):
 
     ax[1].legend(bbox_to_anchor=(1, 1))
 
-    if save is not None:
-        plt.savefig(save)
+    return ax[0].get_figure(), ax
 
-    return fig, ax
-
-def plot_resid(data, save=None, **kwargs):
-    fig, ax = plt.subplots(3, 1, sharex=True, **kwargs)
+def plot_resid(data, ax=None, **kwargs):
+    if ax is None:
+        fig, ax = plt.subplots(3, 1, sharex=True, **kwargs)
 
     for instrument, df in data.groupby("instrument"):
         ax[0].errorbar(x=df.index, y=1e3*df["x"], yerr=1e3*df["x_err"],
@@ -55,13 +54,11 @@ def plot_resid(data, save=None, **kwargs):
 
     ax[0].legend(bbox_to_anchor=(1, 1))
 
-    if save is not None:
-        plt.savefig(save)
+    return ax[0].get_figure(), ax
 
-    return fig, ax
-
-def plot_resid_2d(data, save=None, **kwargs):
-    fig, ax = plt.subplots(**kwargs)
+def plot_resid_2d(data, ax=None, **kwargs):
+    if ax is None:
+        fig, ax = plt.subplots(**kwargs)
 
     for instrument, df in data.groupby("instrument"):
         ax.errorbar(x=1e3*df["x"], y=1e3*df["y"], xerr=1e3*df["x_err"], yerr=1e3*df["y_err"],
@@ -77,13 +74,11 @@ def plot_resid_2d(data, save=None, **kwargs):
 
     ax.legend()
 
-    if save is not None:
-        plt.savefig(save)
+    return ax.get_figure(), ax
 
-    return fig, ax
-
-def plot_trace(sampler, theta=None, show_burnin=True, save=None, **kwargs):
-    fig, ax = plt.subplots(sampler.ndim, sharex=True, **kwargs)
+def plot_trace(sampler, theta=None, show_burnin=True, ax=None, **kwargs):
+    if ax is None:
+        fig, ax = plt.subplots(sampler.ndim, sharex=True, **kwargs)
 
     if show_burnin:
         chain = sampler.get_chain()
@@ -98,39 +93,29 @@ def plot_trace(sampler, theta=None, show_burnin=True, save=None, **kwargs):
         if theta is not None:
             ax[i].axhline(theta[i], color="gray", linestyle="--")
 
-    if save is not None:
-        plt.savefig(save)
+    return ax[0].get_figure(), ax
 
-    return fig, ax
-
-def plot_corner(sampler, theta=None, save=None, corner_kwargs={}):
+def plot_corner(sampler, theta=None, corner_kwargs={}):
     samples = sampler.get_samples()
 
     default_opts = dict(show_titles=True, labels=sampler.names, truths=theta)
     opts = {**default_opts, **corner_kwargs}
-    corner(samples, **opts)
+    return corner(samples, **opts)
 
-    if save is not None:
-        plt.savefig(save)
-
-    plt.show()
-
-def plot_acor(sampler, nmin=100, nsample=10, tol=50, save=None, **kwargs):
-    fig, ax = plt.subplots(**kwargs)
+def plot_acor(sampler, nmin=100, nsample=10, tol_length=50, ax=None, **kwargs):
+    if ax is None:
+        fig, ax = plt.subplots(**kwargs)
 
     chain = sampler.get_chain(discard=sampler.nburn)
     assert len(chain) > nmin, "Not enough samples in chain"
 
     n, tau = np.transpose([(nmax, np.mean(integrated_time(chain[:nmax], tol=0)))
         for nmax in tqdm(np.linspace(100, len(chain), nsample, dtype=int),
-            desc="Computing autocorrelation times")])
+            desc="Compute autocorrelation times")])
 
     ax.plot(n, tau)
-    ax.plot(n, n/50, linestyle="--", color="gray")
+    ax.plot(n, n/tol_length, linestyle="--", color="gray")
 
     ax.set_ylabel(r"$\tau$")
 
-    if save is not None:
-        plt.savefig(save)
-
-    return fig, ax
+    return ax.get_figure(), ax
