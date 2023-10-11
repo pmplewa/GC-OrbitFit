@@ -1,6 +1,6 @@
 import logging
 from os import PathLike
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Sequence
 
 import numpy as np
 import pandas as pd
@@ -25,8 +25,8 @@ class MCMCSampler:
         names: Sequence[str],
         priors: Sequence[UniformPrior],
         model: ModelType,
-        nwalkers: Optional[int] = None,
-        checkpoint: Optional[Union[str, PathLike]] = None,
+        nwalkers: int | None = None,
+        checkpoint: str | PathLike | None = None,
     ):
         assert data.index.is_unique  # check for duplicate epochs
         assert len(names) > 0 and len(names) == len(priors)
@@ -69,7 +69,7 @@ class MCMCSampler:
         return self._model
 
     @property
-    def backend(self) -> Optional[HDFBackend]:
+    def backend(self) -> HDFBackend | None:
         return self._backend
 
     @property
@@ -130,26 +130,22 @@ class MCMCSampler:
         return self.get_chain(discard=self.nburn, flat=True, **kwargs)
 
     def get_sample(
-        self, n: Optional[int] = None, as_array: bool = False
-    ) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+        self, n: int | None = None, as_array: bool = False
+    ) -> np.ndarray | dict[str, np.ndarray]:
         samples = self.get_samples()
         value = np.transpose(samples[np.random.randint(len(samples), size=n)])
         if as_array:
             return value
         return dict(zip(self.names, value))
 
-    def get_mean(
-        self, as_array: bool = False
-    ) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+    def get_mean(self, as_array: bool = False) -> np.ndarray | dict[str, np.ndarray]:
         samples = self.get_samples()
         value = np.mean(samples, axis=0)
         if as_array:
             return value
         return dict(zip(self.names, value))
 
-    def get_std(
-        self, as_array: bool = False
-    ) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+    def get_std(self, as_array: bool = False) -> np.ndarray | dict[str, np.ndarray]:
         samples = self.get_samples()
         value = np.std(samples, axis=0)
         if as_array:
@@ -165,9 +161,9 @@ class MCMCSampler:
 
 def sample_orbit(
     sampler: MCMCSampler,
-    nsteps: Optional[int] = 0,
-    theta0: Optional[np.ndarray] = None,
-    processes: Optional[int] = None,
+    nsteps: int | None = 0,
+    theta0: np.ndarray | None = None,
+    processes: int | None = None,
 ) -> EnsembleSampler:
     """Run the MCMC sampler.
 

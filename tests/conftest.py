@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import pytest
@@ -8,7 +8,7 @@ from gc_orbitfit.priors import UniformPrior
 
 
 @pytest.fixture
-def gp_noise_model() -> Dict[str, Any]:
+def gp_noise_model() -> dict[str, Any]:
     names, priors, theta0 = zip(
         *[
             ("M0", UniformPrior(3, 5), 4.449899),
@@ -30,4 +30,4 @@ def gp_noise_model() -> Dict[str, Any]:
         ]
     )
 
-    return dict(model=GPNoiseModel(), names=names, priors=priors, theta0=theta0)
+    return {"model": GPNoiseModel(), "names": names, "priors": priors, "theta0": theta0}

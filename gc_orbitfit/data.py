@@ -1,11 +1,10 @@
 from os import PathLike
-from typing import Optional, Union
 
 import pandas as pd
 
 
 def load_astrometry(
-    path: Union[str, PathLike], instrument: str, rescale: Optional[float] = None
+    path: str | PathLike, instrument: str, rescale: float | None = None
 ):
     data = pd.read_csv(path, index_col=0)
     data["instrument"] = instrument
@@ -28,7 +27,7 @@ def load_astrometry(
     raise ValueError(f"Unknown instrument '{instrument}'.")
 
 
-def load_velocity(path: Union[str, PathLike], instrument: str):
+def load_velocity(path: str | PathLike, instrument: str):
     data = pd.read_csv(path, index_col=0)
     data["instrument"] = instrument
     if instrument == "NACO":

@@ -1,6 +1,9 @@
 .idea
 .ipynb_checkpoints
+.mypy_cache
+.pytest_cache
 .coverage*
+__pycache__
 dist
 *.pyc
 chain.h5

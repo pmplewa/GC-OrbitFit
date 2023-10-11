@@ -1,4 +1,4 @@
-from typing import Dict, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -60,7 +60,7 @@ class REBOUNDModel:
         bh.params["gr_source"] = 1
 
         # add star "test" particle
-        orbit = dict(a=a, e=e, inc=inc, Omega=Omega, omega=omega, T=tp)
+        orbit = {"a": a, "e": e, "inc": inc, "Omega": Omega, "omega": omega, "T": tp}
         sim.add(hash="test_particle", m=0, **orbit)
         p = sim.particles["test_particle"]
 
@@ -110,13 +110,13 @@ class REBOUNDModel:
 
         return data
 
-    def predict_data(self, params: Dict[str, float], t_val: np.ndarray) -> pd.DataFrame:
+    def predict_data(self, params: dict[str, float], t_val: np.ndarray) -> pd.DataFrame:
         return self.integrate_orbit(t_val, **params)
 
 
 # pylint: disable-next=too-few-public-methods
 class GaussianNoise:
-    def log_likelihood(self, params: Dict[str, float], data: pd.DataFrame) -> float:
+    def log_likelihood(self, params: dict[str, float], data: pd.DataFrame) -> float:
         """The Gaussian log-likelihood function."""
 
         resid = predict_resid(params, data, self)  # type: ignore
@@ -135,7 +135,7 @@ class GaussianNoise:
 
 # pylint: disable-next=too-few-public-methods
 class GPNoise:
-    def log_likelihood(self, params: Dict[str, float], data: pd.DataFrame) -> float:
+    def log_likelihood(self, params: dict[str, float], data: pd.DataFrame) -> float:
         """The GP log-likelihood function (to account for astrometric confusion)."""
 
         resid = predict_resid(params, data, self)  # type: ignore
@@ -181,7 +181,7 @@ def log_gaussian_pdf(r: np.ndarray, sigma: np.ndarray) -> float:
     )
 
 
-def predict_resid(params: Dict[str, float], data: pd.DataFrame, model: ModelType):
+def predict_resid(params: dict[str, float], data: pd.DataFrame, model: ModelType):
     data_tmp = []
 
     for technique, df in data.groupby("technique"):
@@ -215,7 +215,7 @@ def predict_resid(params: Dict[str, float], data: pd.DataFrame, model: ModelType
     )
 
 
-def create_gp(params: Dict[str, float]):
+def create_gp(params: dict[str, float]):
     # GP parameters
     s2 = np.exp(params["log_s2"])
     taux = np.exp(params["log_taux"])

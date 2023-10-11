@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 
 
@@ -22,5 +20,5 @@ class UniformPrior:
 
         return np.random.uniform(self.a, self.b)
 
-    def bounds(self) -> Tuple[float, float]:
+    def bounds(self) -> tuple[float, float]:
         return self.a, self.b

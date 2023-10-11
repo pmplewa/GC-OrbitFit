@@ -1,5 +1,3 @@
-from typing import Dict
-
 import numpy as np
 import pandas as pd
 
@@ -7,7 +5,7 @@ from .models import ModelType, create_gp, predict_resid
 
 
 def sample_gp(
-    params: Dict[str, float],
+    params: dict[str, float],
     data: pd.DataFrame,
     model: ModelType,
     t_val: np.ndarray,

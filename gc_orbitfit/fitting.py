@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Sequence, Tuple, Union
+from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ class MaxLikeFitter(ABC):
         self,
         data: pd.DataFrame,
         names: Sequence[str],
-        bounds: Sequence[Tuple[float, float]],
+        bounds: Sequence[tuple[float, float]],
         model: ModelType,
     ):
         assert data.index.is_unique  # check for duplicate epochs
@@ -35,7 +35,7 @@ class MaxLikeFitter(ABC):
         return self._names
 
     @property
-    def bounds(self) -> Sequence[Tuple[float, float]]:
+    def bounds(self) -> Sequence[tuple[float, float]]:
         return self._bounds
 
     @property
@@ -49,12 +49,10 @@ class MaxLikeFitter(ABC):
         return -self.model.log_likelihood(params, self.data)
 
     @abstractmethod
-    def fit_orbit(self, theta0: Optional[np.ndarray] = None) -> None:
+    def fit_orbit(self, theta0: np.ndarray | None = None) -> None:
         ...
 
-    def get_best_fit(
-        self, as_array: bool = False
-    ) -> Union[np.ndarray, Dict[str, float]]:
+    def get_best_fit(self, as_array: bool = False) -> np.ndarray | dict[str, float]:
         if self._fit_result is None:
             raise RuntimeError("No fit result available.")
 
@@ -65,7 +63,7 @@ class MaxLikeFitter(ABC):
 
 
 class LBFGSBFitter(MaxLikeFitter):
-    def fit_orbit(self, theta0: Optional[np.ndarray] = None) -> None:
+    def fit_orbit(self, theta0: np.ndarray | None = None) -> None:
         """Find the best-fit orbit parameters (using L-BFGS-B)."""
 
         if theta0 is None:
@@ -76,7 +74,7 @@ class LBFGSBFitter(MaxLikeFitter):
             theta0,
             bounds=self.bounds,
             method="L-BFGS-B",
-            options=dict(disp=True, maxiter=np.inf),
+            options={"disp": True, "maxiter": np.inf},
         )
 
         if not fit_result.success:
@@ -86,7 +84,7 @@ class LBFGSBFitter(MaxLikeFitter):
 
 
 class DifferentialEvolutionFitter(MaxLikeFitter):
-    def fit_orbit(self, _theta0: Optional[np.ndarray] = None) -> None:
+    def fit_orbit(self, _theta0: np.ndarray | None = None) -> None:
         """Find the best-fit orbit parameters (using differential evolution)"""
 
         fit_result = differential_evolution(

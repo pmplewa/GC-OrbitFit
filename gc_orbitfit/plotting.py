@@ -141,7 +141,7 @@ def plot_trace(sampler, theta=None, show_burnin=True, ax=None, **kwargs):
 def plot_corner(sampler, theta=None, corner_kwargs=None):
     samples = sampler.get_samples()
 
-    default_opts = dict(show_titles=True, labels=sampler.names, truths=theta)
+    default_opts = {"show_titles": True, "labels": sampler.names, "truths": theta}
     opts = {**default_opts, **(corner_kwargs or {})}
     return corner(samples, **opts)
 

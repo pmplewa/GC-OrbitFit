@@ -1,10 +1,10 @@
-from typing import Any, Dict
+from typing import Any
 
 from gc_orbitfit.data import load_sample_data
 from gc_orbitfit.fitting import LBFGSBFitter
 
 
-def test_fit_orbit(gp_noise_model: Dict[str, Any]):
+def test_fit_orbit(gp_noise_model: dict[str, Any]):
     data = load_sample_data(prefix="")
 
     fitter = LBFGSBFitter(
