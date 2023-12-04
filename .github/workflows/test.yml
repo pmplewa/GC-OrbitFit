@@ -33,7 +33,9 @@ jobs:
           cache: 'poetry'
 
       - name: Install dependencies
-        run: poetry install
+        run: |
+          poetry install
+          poetry run pip install --no-deps --force-reinstall reboundx
 
       - name: Run checks
         run: poetry run invoke check
