@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import differential_evolution, minimize
+from scipy.optimize import minimize
 
 from .models import ModelType
 
@@ -15,9 +15,10 @@ class MaxLikeFitter(ABC):
         names: Sequence[str],
         bounds: Sequence[tuple[float, float]],
         model: ModelType,
-    ):
+    ) -> None:
         assert data.index.is_unique  # check for duplicate epochs
-        assert len(names) > 0 and len(names) == len(bounds)
+        assert len(names) > 0
+        assert len(names) == len(bounds)
 
         self._data = data
         self._names = names
@@ -43,14 +44,12 @@ class MaxLikeFitter(ABC):
         return self._model
 
     def objective(self, theta: np.ndarray) -> float:
-        """The negative log-likelihood function (to be minimized)."""
-
-        params = dict(zip(self.names, theta))
+        """Evaluate the negative log-likelihood (to be minimized)."""
+        params = dict(zip(self.names, theta, strict=True))
         return -self.model.log_likelihood(params, self.data)
 
     @abstractmethod
-    def fit_orbit(self, theta0: np.ndarray | None = None) -> None:
-        ...
+    def fit_orbit(self, theta0: np.ndarray | None = None) -> None: ...
 
     def get_best_fit(self, as_array: bool = False) -> np.ndarray | dict[str, float]:
         if self._fit_result is None:
@@ -59,15 +58,14 @@ class MaxLikeFitter(ABC):
         if as_array:
             return self._fit_result.x
 
-        return dict(zip(self.names, self._fit_result.x))
+        return dict(zip(self.names, self._fit_result.x, strict=True))
 
 
 class LBFGSBFitter(MaxLikeFitter):
     def fit_orbit(self, theta0: np.ndarray | None = None) -> None:
         """Find the best-fit orbit parameters (using L-BFGS-B)."""
-
         if theta0 is None:
-            raise ValueError("'theta0' may not be 'None'")
+            raise ValueError("'theta0' may not be 'None'.")
 
         fit_result = minimize(
             self.objective,
@@ -75,24 +73,6 @@ class LBFGSBFitter(MaxLikeFitter):
             bounds=self.bounds,
             method="L-BFGS-B",
             options={"disp": True, "maxiter": np.inf},
-        )
-
-        if not fit_result.success:
-            raise RuntimeError("The fit was unsuccessful.")
-
-        self._fit_result = fit_result
-
-
-class DifferentialEvolutionFitter(MaxLikeFitter):
-    def fit_orbit(self, _theta0: np.ndarray | None = None) -> None:
-        """Find the best-fit orbit parameters (using differential evolution)"""
-
-        fit_result = differential_evolution(
-            self.objective,
-            self.bounds,
-            maxiter=None,
-            polish=True,
-            disp=True,
         )
 
         if not fit_result.success:

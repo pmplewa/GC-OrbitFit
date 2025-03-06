@@ -1,69 +1,86 @@
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
 name = "gc-orbitfit"
-version = "0.1.0"
+version = "0.2.0"
+requires-python = ">=3.12"
 description = "A tool for fitting stellar orbits in the Galactic Center."
 license="MIT"
-authors = ["Philipp Plewa <pmplewa@users.noreply.github.com>"]
+authors = [
+    { name = "Philipp Plewa", email = "pmplewa@users.noreply.github.com" },
+]
 readme = "README.md"
 repository = "https://github.com/pmplewa/GC-OrbitFit"
-classifiers = ["Intended Audience :: Developers", "Operating System :: OS Independent"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "astropy>=7.0",
+    "dynesty>=2.1",
+    "george>=0.4",
+    "matplotlib>=3.10",
+    "numpy>=2.2",
+    "pandas>=2.2",
+    "rebound>=4.4",
+    "reboundx>=4.4",
+    "scipy>=1.15",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10"
-astropy = ">=5.2"
-corner = ">=2.2"
-emcee = ">=3.1"
-george = ">=0.4"
-h5py = ">=3.8"
-matplotlib = ">=3.6"
-multiprocess = ">=0.70"
-numpy = ">=1.22"
-pandas = ">=1.5"
-rebound = ">=3.23"
-reboundx = ">=3.9"
-scipy = ">=1.9"
-tqdm = ">=4.64"
-
-[tool.poetry.group.dev.dependencies]
-black = "23.9.*"
-invoke = "2.2.*"
-isort = "5.12.*"
-mypy = "1.6.*"
-pylint = "3.0.*"
-pytest = "7.4.*"
-pytest-cov = "4.1.*"
-
-[tool.isort]
-profile = "black"
+[dependency-groups]
+dev = [
+    "invoke>=2.2",
+    "jupyterlab>=4.3",
+    "mypy>=1.15.0",
+    "pandas-stubs>=2.2",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
+]
 
 [tool.mypy]
-exclude = ["venv"]
+check_untyped_defs = true
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
+ignore_missing_imports = true
 module = [
     "astropy.*",
-    "corner.*",
-    "emcee.*",
+    "dynesty.*",
     "george.*",
-    "invoke.*",
-    "matplotlib.*",
-    "multiprocess.*",
-    "pandas.*",
     "rebound.*",
     "reboundx.*",
     "scipy.*",
-    "tqdm.*",
 ]
-ignore_missing_imports = true
 
-[tool.pylint."MESSAGES CONTROL"]
-disable = """
-duplicate-code,
-invalid-name,
-missing-docstring,
-pointless-string-statement,
-"""
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN003", # Missing type annotation for `**kwargs`
+    "COM812", # May cause conflicts when used with the formatter
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D107", # Missing docstring in `__init__`
+    "D203", # D203 and D211 are incompatible
+    "D213", # D213 and D212 are incompatible
+    "EM101", # Exception must not use a string literal
+    "EM102", # Exception must not use an f-string literal
+    "FBT001", # Boolean-typed positional argument in function definition
+    "FBT002", # Boolean default positional argument in function definition
+    "N803", # Argument name should be lowercase
+    "N806", # Variable in function should be lowercase
+    "PD901", # Avoid using the generic variable name `df` for DataFrames,
+    "PLR0913", # Too many arguments in function definition
+    "PLR2004", # Magic value used in comparison
+    "S101", # Use of `assert`
+    "TRY003", # Avoid specifying long messages outside the exception class
+]

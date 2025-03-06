@@ -9,36 +9,29 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  POETRY_VERSION: 1.7.1
-
 jobs:
   test:
-    name: Test py${{ matrix.python-version }}
+    name: Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.10']
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: pipx install poetry==$POETRY_VERSION
-
-      - name: Set up python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
+          version: "0.5.29"
 
       - name: Install dependencies
+        # https://github.com/dtamayo/reboundx/issues/141
         run: |
-          poetry install
-          poetry run pip install --no-deps --force-reinstall reboundx
+          uv sync --all-extras --dev
+          uv pip uninstall reboundx
+          uv cache clean
+          uv pip install reboundx --no-build-isolation
 
       - name: Run checks
-        run: poetry run invoke check
+        run: uv run invoke fix && uv run invoke check
 
       - name: Run tests
-        run: poetry run invoke test
+        run: uv run invoke test
