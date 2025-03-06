@@ -1,5 +1,3 @@
-from typing import Union
-
 import numpy as np
 import pandas as pd
 import rebound
@@ -8,16 +6,15 @@ from george import GP
 from george.kernels import ExpSquaredKernel
 
 from .constants import (
-    G_times_R03,
-    c_times_R0,
-    ref_time,
-    velocity_conversion_factor_per_R0,
+    C_TIMES_R0,
+    G_TIMES_R03,
+    REF_TIME,
+    VELOCITY_CONVERSION_FACTOR_PER_R0,
 )
 
 
 class REBOUNDModel:
     @staticmethod
-    # pylint: disable-next=too-many-arguments,too-many-locals
     def integrate_orbit(
         t_val: np.ndarray,
         M0: float,
@@ -33,12 +30,12 @@ class REBOUNDModel:
         vx0: float = 0.0,
         vy0: float = 0.0,
         vz0: float = 0.0,
-        **effect_kwargs
+        **effect_kwargs,
     ) -> pd.DataFrame:
         # account for factor of R0 in l_unit
-        G = G_times_R03 / R0**3
-        c = c_times_R0 / R0
-        velocity_conversion_factor = velocity_conversion_factor_per_R0 * R0
+        G = G_TIMES_R03 / R0**3
+        c = C_TIMES_R0 / R0
+        velocity_conversion_factor = VELOCITY_CONVERSION_FACTOR_PER_R0 * R0
 
         t_val = np.sort(t_val)
 
@@ -85,8 +82,8 @@ class REBOUNDModel:
             y_obs = p.x
 
             # account for a possible drift of the astrometric reference frame
-            x_obs += x0 + vx0 * (t - ref_time)
-            y_obs += y0 + vy0 * (t - ref_time)
+            x_obs += x0 + vx0 * (t - REF_TIME)
+            y_obs += y0 + vy0 * (t - REF_TIME)
 
             # account for the relativistic Doppler effect
             beta_costheta = p.vz / c
@@ -106,7 +103,12 @@ class REBOUNDModel:
             # account for a possible radial velocity offset
             vz_obs += vz0
 
-            data.loc[t_obs] = {"t'": t, "x": x_obs, "y": y_obs, "vz": vz_obs}
+            data.loc[t_obs] = {  # type: ignore[call-overload]
+                "t'": t,
+                "x": x_obs,
+                "y": y_obs,
+                "vz": vz_obs,
+            }
 
         return data
 
@@ -114,31 +116,31 @@ class REBOUNDModel:
         return self.integrate_orbit(t_val, **params)
 
 
-# pylint: disable-next=too-few-public-methods
-class GaussianNoise:
+class GaussianNoiseModel(REBOUNDModel):
     def log_likelihood(self, params: dict[str, float], data: pd.DataFrame) -> float:
-        """The Gaussian log-likelihood function."""
-
-        resid = predict_resid(params, data, self)  # type: ignore
+        """Evaluate the Gaussian log-likelihood."""
+        resid = predict_resid(params, data, self)
 
         pos_resid = resid[["x", "x_err", "y", "y_err"]].dropna()
         vel_resid = resid[["vz", "vz_err"]].dropna()
 
         value = 0.0
-
-        value += log_gaussian_pdf(pos_resid["x"], pos_resid["x_err"])
-        value += log_gaussian_pdf(pos_resid["y"], pos_resid["y_err"])
-        value += log_gaussian_pdf(vel_resid["vz"], vel_resid["vz_err"])
-
+        value += log_gaussian_pdf(
+            np.asarray(pos_resid["x"]), np.asarray(pos_resid["x_err"])
+        )
+        value += log_gaussian_pdf(
+            np.asarray(pos_resid["y"]), np.asarray(pos_resid["y_err"])
+        )
+        value += log_gaussian_pdf(
+            np.asarray(vel_resid["vz"]), np.asarray(vel_resid["vz_err"])
+        )
         return value
 
 
-# pylint: disable-next=too-few-public-methods
-class GPNoise:
+class GPNoiseModel(REBOUNDModel):
     def log_likelihood(self, params: dict[str, float], data: pd.DataFrame) -> float:
-        """The GP log-likelihood function (to account for astrometric confusion)."""
-
-        resid = predict_resid(params, data, self)  # type: ignore
+        """Evaluate the GP log-likelihood."""
+        resid = predict_resid(params, data, self)
 
         pos_resid = resid[["x", "x_err", "y", "y_err", "technique"]].dropna()
         vel_resid = resid[["vz", "vz_err"]].dropna()
@@ -146,42 +148,33 @@ class GPNoise:
         gpx, gpy = create_gp(params)
 
         value = 0.0
-
         for technique, df in pos_resid.groupby("technique"):
             if technique == "interferometry":
                 # unaffected by source confusion
-                value += log_gaussian_pdf(df["x"], df["x_err"])
-                value += log_gaussian_pdf(df["y"], df["y_err"])
+                value += log_gaussian_pdf(np.asarray(df["x"]), np.asarray(df["x_err"]))
+                value += log_gaussian_pdf(np.asarray(df["y"]), np.asarray(df["y_err"]))
             else:
                 assert technique == "imaging"
                 gpx.compute(df.index, df["x_err"])
                 gpy.compute(df.index, df["y_err"])
                 value += gpx.log_likelihood(df["x"])
                 value += gpy.log_likelihood(df["y"])
-
-        value += log_gaussian_pdf(vel_resid["vz"], vel_resid["vz_err"])
-
+        value += log_gaussian_pdf(
+            np.asarray(vel_resid["vz"]), np.asarray(vel_resid["vz_err"])
+        )
         return value
 
 
-class GaussianNoiseModel(REBOUNDModel, GaussianNoise):
-    pass
-
-
-class GPNoiseModel(REBOUNDModel, GPNoise):
-    pass
-
-
-ModelType = Union[GaussianNoiseModel, GPNoiseModel]
+ModelType = GaussianNoiseModel | GPNoiseModel
 
 
 def log_gaussian_pdf(r: np.ndarray, sigma: np.ndarray) -> float:
-    return -0.5 * np.sum(r**2 / sigma**2) - 0.5 * np.sum(
-        np.log(2 * np.pi * sigma**2)
-    )
+    return -0.5 * np.sum(r**2 / sigma**2) - 0.5 * np.sum(np.log(2 * np.pi * sigma**2))
 
 
-def predict_resid(params: dict[str, float], data: pd.DataFrame, model: ModelType):
+def predict_resid(
+    params: dict[str, float], data: pd.DataFrame, model: ModelType
+) -> pd.DataFrame:
     data_tmp = []
 
     for technique, df in data.groupby("technique"):
@@ -192,10 +185,10 @@ def predict_resid(params: dict[str, float], data: pd.DataFrame, model: ModelType
             params_copy["y0"] = 0
             params_copy["vx0"] = 0
             params_copy["vy0"] = 0
-            data_tmp.append(model.predict_data(params_copy, df.index))
+            data_tmp.append(model.predict_data(params_copy, df.index.values))
         else:
             assert technique in ("imaging", "spectroscopy")
-            data_tmp.append(model.predict_data(params, df.index))
+            data_tmp.append(model.predict_data(params, df.index.values))
 
     data_pred = pd.concat(data_tmp)
 
@@ -215,7 +208,7 @@ def predict_resid(params: dict[str, float], data: pd.DataFrame, model: ModelType
     )
 
 
-def create_gp(params: dict[str, float]):
+def create_gp(params: dict[str, float]) -> tuple[GP, GP]:
     # GP parameters
     s2 = np.exp(params["log_s2"])
     taux = np.exp(params["log_taux"])
@@ -227,7 +220,7 @@ def create_gp(params: dict[str, float]):
     return gpx, gpy
 
 
-def central_force(reb_sim, rebx_effect, particles, nparticles):
+def central_force(reb_sim, rebx_effect, particles, nparticles):  # noqa: ANN001, ANN201
     sim = reb_sim.contents
     effect = rebx_effect.contents
 
@@ -256,5 +249,7 @@ def retardation_equation(t, t_obs, sim, particle_hash):
     p = sim.particles[particle_hash]
     return t_obs - p.z / speed_of_light
 
-t = fixed_point(retardation_equation, t_obs, args=(t_obs, sim, "test_particle"), xtol=1e-8)
+t = fixed_point(
+    retardation_equation, t_obs, args=(t_obs, sim, "test_particle"), xtol=1e-8,
+)
 """

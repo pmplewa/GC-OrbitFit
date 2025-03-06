@@ -23,11 +23,12 @@ def gp_noise_model() -> dict[str, Any]:
             ("y0", UniformPrior(-5e-3, 5e-3), -0.000223),
             ("vx0", UniformPrior(-1e-3, 1e-3), -0.000121),
             ("vy0", UniformPrior(-1e-3, 1e-3), 0.000044),
-            ("vz0", UniformPrior(0, 50), 8.812269),
+            ("vz0", UniformPrior(-50, 50), 8.812269),
             ("log_s2", UniformPrior(np.log(0.01e-6), np.log(1e-3)), -15.13448),
             ("log_taux", UniformPrior(np.log(0.01), np.log(5)), -0.630571),
             ("log_tauy", UniformPrior(np.log(0.01), np.log(5)), -2.151707),
-        ]
+        ],
+        strict=True,
     )
 
     return {"model": GPNoiseModel(), "names": names, "priors": priors, "theta0": theta0}

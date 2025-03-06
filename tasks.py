@@ -1,28 +1,20 @@
-import invoke
+from invoke import task
+from invoke.context import Context
 
 
-@invoke.task
-def format(ctx):
-    print("## Run black")
-    ctx.run("black .")
-    print("## Run isort")
-    ctx.run("isort .")
+@task
+def fix(ctx: Context) -> None:
+    ctx.run("ruff format .")
+    ctx.run("ruff check . --fix")
 
 
-@invoke.task
-def check(ctx):
-    print("## Check formatting")
-    ctx.run("black --check .")
-    print("## Check imports")
-    ctx.run("isort . --check-only")
-    print("## Check static typing")
-    ctx.run("mypy . --check-untyped-defs")
-    print("## Linting code")
-    ctx.run("pylint gc_orbitfit")
-    ctx.run("pylint tests")
+@task
+def check(ctx: Context) -> None:
+    ctx.run("ruff format . --check")
+    ctx.run("ruff check .")
+    ctx.run("mypy .")
 
 
-@invoke.task
-def test(ctx):
-    print("## Run tests")
+@task
+def test(ctx: Context) -> None:
     ctx.run("pytest --verbose --cov=gc_orbitfit tests")

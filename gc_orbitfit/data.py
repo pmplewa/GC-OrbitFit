@@ -5,7 +5,7 @@ import pandas as pd
 
 def load_astrometry(
     path: str | PathLike, instrument: str, rescale: float | None = None
-):
+) -> pd.DataFrame:
     data = pd.read_csv(path, index_col=0)
     data["instrument"] = instrument
     if rescale is not None:
@@ -27,7 +27,7 @@ def load_astrometry(
     raise ValueError(f"Unknown instrument '{instrument}'.")
 
 
-def load_velocity(path: str | PathLike, instrument: str):
+def load_velocity(path: str | PathLike, instrument: str) -> pd.DataFrame:
     data = pd.read_csv(path, index_col=0)
     data["instrument"] = instrument
     if instrument == "NACO":
@@ -49,7 +49,6 @@ def load_sample_data(
     prefix: str = "https://github.com/pmplewa/GC-OrbitFit/raw/main/",
 ) -> pd.DataFrame:
     """Load the default data set."""
-
     pos_data = pd.concat(
         [
             load_astrometry(f"{prefix}astrometry_SHARP.csv", instrument="SHARP"),

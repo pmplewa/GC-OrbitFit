@@ -10,9 +10,8 @@ def sample_gp(
     model: ModelType,
     t_val: np.ndarray,
     n: int = 1,
-):
+) -> pd.DataFrame:
     """Sample from a GP model for astrometric confusion."""
-
     if n < 1:
         raise ValueError("'n' must be equal or greater 1.")
 
